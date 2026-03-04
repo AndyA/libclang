@@ -2,25 +2,24 @@
 # -*- coding: utf-8 -*-
 
 import os
+from sysconfig import get_platform
 
-from distutils.command.build import build
-from distutils.dir_util import mkpath
-from setuptools import setup, find_packages, Extension
+from setuptools import Extension, find_packages, setup
+from setuptools.command.bdist_wheel import bdist_wheel
 from setuptools.command.build_ext import build_ext
-from wheel.bdist_wheel import get_platform, bdist_wheel
 
 
 def platform_ext(plat):
-    if 'linux' in plat:
-        return '.so'
-    if 'macosx' in plat:
-        return '.dylib'
-    if 'win' in plat:
-        return '.dll'
-    raise RuntimeError('Invalid platform value: %s' % plat)
+    if "linux" in plat:
+        return ".so"
+    if "macosx" in plat:
+        return ".dylib"
+    if "win" in plat:
+        return ".dll"
+    raise RuntimeError("Invalid platform value: %s" % plat)
 
 
-platform = get_platform(None)
+platform = get_platform()
 
 
 class bdist_wheel_injected(bdist_wheel):
@@ -42,68 +41,55 @@ class CopyNativeExtension(Extension):
 class CopyNativeCommand(build_ext):
     def run(self):
         for ext in self.extensions:
-            source_dir = './native/'
+            source_dir = "./native/"
             target_dir = os.path.dirname(self.get_ext_fullpath(ext.name))
-            libname = 'libclang' + platform_ext(platform)
-            mkpath(target_dir)
-            self.copy_file(os.path.join(source_dir, libname),
-                           os.path.join(target_dir, libname))
+            libname = "libclang" + platform_ext(platform)
+            os.makedirs(target_dir, exist_ok=True)
+            self.copy_file(
+                os.path.join(source_dir, libname),
+                os.path.join(target_dir, libname),
+            )
 
-with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'README.md'), encoding='utf-8', mode='r') as fp:
+
+with open(
+    os.path.join(os.path.abspath(os.path.dirname(__file__)), "README.md"),
+    encoding="utf-8",
+    mode="r",
+) as fp:
     long_description = fp.read()
 
 setup(
-    name='libclang',
-    version='22.1.0',
-    description='Clang Python Bindings, mirrored from the official LLVM repo: https://github.com/llvm/llvm-project/tree/main/clang/bindings/python, to make the installation process easier.',
+    name="libclang",
+    version="22.1.0",
+    description="Clang Python Bindings, mirrored from the official LLVM repo: https://github.com/llvm/llvm-project/tree/main/clang/bindings/python, to make the installation process easier.",
     long_description=long_description,
-    long_description_content_type='text/markdown',
-    author='Tao He',
-    author_email='sighingnow@gmail.com',
-    url='https://github.com/sighingnow/libclang',
-    license='Apache License 2.0',
+    long_description_content_type="text/markdown",
+    author="Tao He",
+    author_email="sighingnow@gmail.com",
+    url="https://github.com/sighingnow/libclang",
+    license="Apache License 2.0",
     classifiers=[
-        'Development Status :: 5 - Production/Stable',
-        'Intended Audience :: Developers',
+        "Development Status :: 5 - Production/Stable",
+        "Intended Audience :: Developers",
         "Topic :: Software Development :: Compilers",
-        'Operating System :: MacOS :: MacOS X',
-        'Operating System :: Microsoft :: Windows',
-        'Operating System :: POSIX',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9',
-        'Programming Language :: Python :: 3.10',
-        'Programming Language :: Python :: 3.11',
-        'Programming Language :: Python :: 3.12',
-        "License :: OSI Approved :: Apache Software License",
+        "Operating System :: MacOS :: MacOS X",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3.14",
     ],
-    platforms='any',
-    keywords='Clang Python Bindings',
-
-    ext_modules=[CopyNativeExtension('clang.native.clang')],
+    platforms="any",
+    keywords="Clang Python Bindings",
+    ext_modules=[CopyNativeExtension("clang.native.clang")],
     cmdclass={
-        'build_ext': CopyNativeCommand,
-        'bdist_wheel': bdist_wheel_injected,
+        "build_ext": CopyNativeCommand,
+        "bdist_wheel": bdist_wheel_injected,
     },
-
     zip_safe=False,
-
-    package_dir={'': 'python'},
-    packages=find_packages('python'),
-
-    test_suite='python/tests',
-
+    package_dir={"": "python"},
+    packages=find_packages("python"),
+    test_suite="python/tests",
     project_urls={
-        'Documentation': 'https://libclang.readthedocs.io',
-        'Source': 'https://github.com/sighingnow/libclang',
-        'Tracker': 'https://github.com/sighingnow/libclang/issues',
+        "Documentation": "https://libclang.readthedocs.io",
+        "Source": "https://github.com/sighingnow/libclang",
+        "Tracker": "https://github.com/sighingnow/libclang/issues",
     },
 )
